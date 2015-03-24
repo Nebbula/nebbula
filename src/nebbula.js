@@ -1,7 +1,7 @@
-function TASS (c, callback) {
+function NEBBULA (c, callback) {
 	function processInclude (c) {
 		return c.replace(/@include\s+([\w\-]+)(\(.*?\))?\s*;/g, function (_, name, args) {
-			var mixin = TASS.mixins[name];
+			var mixin = NEBBULA.mixins[name];
 			if (!mixin) return '/* unknown mixin: ' + name + ' */';
 			var content = mixin.content;
 			if (args) {
@@ -25,11 +25,11 @@ function TASS (c, callback) {
 	var external = /^@include\s+(.+?\..+?)\s*;\n?/gm;
 	var resources = {}; c.replace(external, function (_, path) {
 		resources[path] = function (cont) {
-			TASS.read(path, function (data) {
+			NEBBULA.read(path, function (data) {
 				if (/\.css$/.test(path)) {
 					cont(data);
 				} else {
-					TASS(data, cont);
+					NEBBULA(data, cont);
 				}
 			});
 		};
@@ -39,7 +39,7 @@ function TASS (c, callback) {
 	paralell(resources, function (resources) {
 		c = c.replace(/^@mixin\s+([\w\-]+)\s*(\([^\)]+\))?\s*\{([\s\S]*?)^\}/gm, function (_, name, args, content) {
 			if (args) args = args.slice(1, -1).split(/\s*,\s*/);
-			TASS.mixins[name] = {
+			NEBBULA.mixins[name] = {
 				args : args,
 				content : processInclude(content)
 			};
@@ -48,7 +48,7 @@ function TASS (c, callback) {
 
 		var nesting  = [ [] ];
 		var level    = [];
-		var variables = TASS.variables;
+		var variables = NEBBULA.variables;
 		c = processInclude(c).replace(/(^[^\{\};]+\{)|(\})|^\s*(\$[\w\-]+\s*:.+);|(\$[\w\-]+)/gm, function (_, open, close, vardef, varget) {
 			if (open) {
 				var scope = function (_parent) { this._parent = _parent };
@@ -116,7 +116,7 @@ NEBBULA.init();
 this.NEBBULA = NEBBULA;
 
 if (typeof document != 'undefined') (function () {
-	TASS.read = function (path, callback) {
+	NEBBULA.read = function (path, callback) {
 		var req;
 		try {
 			req = new XMLHttpRequest();
@@ -127,7 +127,7 @@ if (typeof document != 'undefined') (function () {
 				try {
 					req = new ActiveXObject('MSXML2.XMLHTTP.3.0');
 				} catch (e) {
-					console.log('[TASS] Error: Cannot create XMLHttpRequest object');
+					console.log('[NEBBULA] Error: Cannot create XMLHttpRequest object');
 				}
 			}
 		}
@@ -137,7 +137,7 @@ if (typeof document != 'undefined') (function () {
 			if (req.status == 200) {
 				callback(req.responseText);
 			} else {
-				callback('/* [TASS] Error:' + req.status + ' ' + req.responseText + ' */');
+				callback('/* [NEBBULA] Error:' + req.status + ' ' + req.responseText + ' */');
 			}
 		};
 		req.send(null);
@@ -145,9 +145,9 @@ if (typeof document != 'undefined') (function () {
 
 	var links = document.getElementsByTagName('link');
 	for (var i = 0, it; (it = links[i]); i++) (function (link) {
-		if (link.rel != 'stylesheet/tass' || !link.href) return;
-		TASS.read(link.href, function (data) {
-			TASS(data, function (css) {
+		if (link.rel != 'stylesheet/Nebbula' || !link.href) return;
+		NEBBULA.read(link.href, function (data) {
+			NEBBULA(data, function (css) {
 				var style = document.createElement('style');
 				style.type = 'text/css';
 				style.appendChild(document.createTextNode(css));
