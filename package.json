@@ -1,0 +1,25 @@
+{
+  "name": "nebbula",
+  "description": "A CSS preprocessor.",
+  "version": "0.0.2",
+  "bin": {
+    "nebbula": "bin/nebbula"
+  },
+  "author": "Giovanny Andres Gongora Granada",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Nebbula/nebbula.git"
+  },
+  "keywords": [
+    "nebbula",
+    "css",
+    "preprocessor",
+    "mcss",
+    "stylesheet",
+    "parser"
+  ],
+  "main": "index.js",
+  "devDependencies": {
+    "optimist": "*"
+  }
+}
