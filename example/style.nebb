@@ -1,12 +1,26 @@
-$base : #fff;
-$color: #000;
-
-#global-header {
-	$base : #666;
-	$color: #ccc;
-
-	background: $base;
-	color: $color;
+Document {
+  background-color: silver
+  color:gray
+  
+  -main {
+    padding:30px
+    
+    heading {
+      border-bottom: 1px solid gray
+      background-color: silver
+      h1 {
+       color: black
+      }
+    }
+    
+  }
+  
 }
 
+$car {
+  background-image: url('car.png')
+}
 
+Cat {
+  color: black;
+}

@@ -1,115 +1,40 @@
 #!/usr/bin/env node
 
-var NEBBULA = require('../lib/nebbula').NEBBULA;
+var nebbula = require('../src/main'), 
+	fs = require('fs')
 
-var fs = require('fs');
-var path = require('path');
-var util = require('util');
-var opts = {
-	watch : [],
-	files : []
-};
-var args = process.argv.slice(2);
+var argv = require('optimist').usage('Usage: $0 [entry files] {OPTIONS}').wrap(80).option('outfile', {
+  alias : 'o',
+  desc : 'Write the generated css to this file.\nIf unspecified, prints to stdout.'
+}).argv
 
-for (var i = 0, len = args.length; i < len; i++) {
-	if (args[i].match(/--watch/)) {
-		opts.watch.push(args[++i]);
-	} else
-	if (args[i].match(/--version|-v/)) {
-		console.error('version: ' + NEBBULA.version);
-	} else
-	if (args[i].match(/--\S+|-\S+/)) {
-		console.error('Unknown option: ' + args[i]);
-		process.exit(1);
-	} else {
-		opts.files.push(path.resolve(args[i]));
-	}
-}
+var data = ""
+argv._.forEach(function(path){
+  data += fs.readFileSync(path, 'utf8') + "\n"
+})
 
-var cd = path.resolve('.');
 
-function setDirectory (dir) {
-	dir = path.resolve(dir);
-	NEBBULA.read = function (name, callback) {
-		name = path.resolve(dir, name);
-		fs.readFile(name, 'utf-8', function (error, data) {
-			if (error) callback('/* ' + error + ' */');
-			callback(data);
-		});
-	};
-}
 
-setDirectory(cd);
 
-if (opts.files[0] == '-') {
-	process.stdin.resume();
-	process.stdin.setEncoding('utf8');
 
-	var css = '';
-	process.stdin.on('data', function (data) { css += data; });
-	process.stdin.on('end', function () {
-		NEBBULA(css, console.log)
-	});
+var css = nebbula(data)
+
+if (argv.outfile) {
+  
+  var maxDate = null
+  argv._.forEach(function(path){
+     var date = fs.statSync(path).mtime
+     if (!maxDate || date > maxDate){
+       maxDate = date
+     }
+  })
+  
+  fs.writeFileSync(argv.outfile, css)
+  
+  if (maxDate){
+    fs.utimesSync(argv.outfile, maxDate, maxDate)
+  }
+  
 } else {
-	opts.files.forEach(function (file) {
-		setDirectory(path.dirname(file));
-		NEBBULA(fs.readFileSync(file, 'utf-8'), console.log);
-	});
-}
-
-if (opts.watch) {
-	opts.watch.forEach(function (watch) {
-		var io = watch.split(':');
-		var input = io[0], output = io[1];
-		if (fs.statSync(input).isDirectory()) {
-			if (!fs.statSync(output).isDirectory()) {
-				log('error', '%s is not a directory', output);
-				process.exit(1);
-			}
-			log('watch', input);
-			var getFiles = function () {
-				var ret = {};
-				fs.readdirSync(input).filter(function (_) { return /\.nebb$/.test(_) }).forEach(function (_) {
-					ret[_] = fs.statSync(path.join(input, _)).mtime.getTime();
-				});
-				return ret;
-			};
-			var files = getFiles();
-			fs.watch(input, function (e) {
-				if (e != 'change') return;
-				var current = getFiles();
-				for (var key in current) if (current.hasOwnProperty(key)) {
-					if (current[key] > (files[key] || 0)) {
-						log('change', key);
-						var name = key.replace(/\.nebb$/, '.css');
-						var file = path.join(output, name);
-						NEBBULA(fs.readFileSync(path.join(input, key), 'utf-8'), function (css) {
-							fs.writeFileSync(file, css, 'utf-8');
-							log('compiled', '%s => %s', key, file);
-						})
-					}
-				}
-				files = current;
-			});
-		} else {
-			log('watch', input);
-			fs.watch(input, function (e) {
-				if (e != 'change') return;
-				log('change', input);
-				NEBBULA(fs.readFileSync(input, 'utf-8'), function (css) {
-					fs.writeFileSync(output, css, 'utf-8');
-					log('compiled', '%s => %s', input, output);
-				})
-			});
-		}
-	});
-}
-
-function log (type, format, args) {
-	var args = Array.prototype.slice.call(arguments);
-	type = args.shift();
-	format = args.shift();
-	args.unshift(type);
-	args.unshift("\u001b[32m[%s]\u001b[0m " + format);
-	console.log.apply(console, args);
+  console.log(css)
 }

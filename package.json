@@ -1,7 +1,7 @@
 {
   "name": "nebbula",
   "description": "A CSS preprocessor.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "bin": {
     "nebbula": "bin/nebbula"
   },
@@ -18,7 +18,7 @@
     "stylesheet",
     "parser"
   ],
-  "main": "index.js",
+  "main": "src/main.js",
   "devDependencies": {
     "optimist": "*"
   }
